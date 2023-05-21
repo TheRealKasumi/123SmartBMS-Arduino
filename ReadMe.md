@@ -15,8 +15,8 @@ However the packet size is fixed and only one of the between modules per cycle w
 Data related to the whole pack is sent each cycle.
 The `end` module has a free connector which can be used to grab these packets.
 
--  Pin 1: ground
--  Pin 2: (inverted) data
+-  Pin 1: (inverted) data
+-  Pin 2: ground
 -  Interface: UART
 -  Baud rate: 9600
 -  Voltage: depends on cell voltage, usually 2.5V to 3.65V for LiFePo4
@@ -28,8 +28,8 @@ The `end` module has a free connector which can be used to grab these packets.
 
 ![Schema](schema.jpg)
 
--  Connect `BMS_DATA` to pin 2 of the BMS data port
--  Connect `BMS_GROUND` to pin 1 of the BMS
+-  Connect `BMS_DATA` to pin 1 of the BMS data port
+-  Connect `BMS_GROUND` to pin 2 of the BMS
 -  Connect `ARDUINO_VCC` to the supply voltage of your Arduino (3.3V or 5V)
 -  Connect `ARDUINO_DATA` to any unused pin
 -  Connect `ARDUINO_GND` to ground of the Arduino
