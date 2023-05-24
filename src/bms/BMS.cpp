@@ -3,6 +3,8 @@
  * @author TheRealKasumi
  * @brief Implementation of the {@link BMS}
  * @copyright Copyright (c) 2023 TheRealKasumi
+ * @attention Many thanks to the authors of the https://github.com/123electric/123SmartBMS-Venus project.
+ *            The provided code saved my a lot of work decoding the data :) .
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,17 +53,18 @@ const int BMS::readBatteryData(const unsigned long timeout)
 	uint8_t buffer[58] = {0};
 	size_t bufferIndex = 0;
 
-	// Read all bytes from the stream
+	// Read all 58 bytes from the stream
+	// Will be aborted once the timeout is reached
 	const unsigned long startTime = millis();
 	while (bufferIndex < sizeof(buffer))
 	{
-		// Read new data into the buffer
+		// Read newly available data into the buffer
 		if (this->stream->available())
 		{
 			buffer[bufferIndex++] = this->stream->read();
 		}
 
-		// Check for timeout
+		// Check for timeouts
 		else if (millis() - startTime > timeout)
 		{
 			return 1;
@@ -83,7 +86,7 @@ const int BMS::readBatteryData(const unsigned long timeout)
 		return 2;
 	}
 
-	// Read the battery data from the buffer
+	// Read the battery data from the buffer and decode it
 	this->batteryData.cellCount = buffer[25];
 	this->batteryData.cellVoltageMin = this->decodeCellVoltage(&buffer[51]);
 	this->batteryData.cellVoltageMax = this->decodeCellVoltage(&buffer[53]);

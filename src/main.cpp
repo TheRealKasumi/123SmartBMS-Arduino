@@ -22,13 +22,14 @@
 #include <SoftwareSerial.h>
 #include "bms/BMS.h"
 
-// Configuration
+// Some configuration
 #define SERIAL_BAUD_RATE 115200
 #define BMS_SERIAL_RX_PIN 3
 #define BMS_SERIAL_BAUD_RATE 9600
 #define BMS_SERIAL_INVERT false
 
-// Global instances
+// Some bad practice global vars
+// (Sorry was around 02:00 when I wrote this)
 SoftwareSerial *bmsSerial = nullptr;
 BMS *bms = nullptr;
 
@@ -44,8 +45,13 @@ void setup()
 	bmsSerial = new SoftwareSerial(BMS_SERIAL_RX_PIN, -1, BMS_SERIAL_INVERT);
 	bmsSerial->begin(BMS_SERIAL_BAUD_RATE);
 
-	// Create an {@link BMS} instance
+	// Create an {@link BMS} instance to decode its data
 	bms = new BMS(bmsSerial);
+
+	// Switch an output pin depending on SOC
+	// Do what ever you need for your purpose instead
+	pinMode(13, OUTPUT);
+	digitalWrite(13, HIGH);
 }
 
 /**
@@ -54,42 +60,55 @@ void setup()
 void loop()
 {
 	// Read the BMS data
-	const int result = bms->readBatteryData(500);
+	const int result = bms->readBatteryData(1000);
 	if (result == 1)
 	{
-		Serial.println("Warn: Failed to read BMS data. Timeout occured because no data was received within the timeout.");
+		Serial.println("Warn: Failed to read BMS data. Timeout occurred because no data was received within the timeout.");
+		return;
 	}
 	else if (result == 2)
 	{
-		Serial.println("Error: The received BMS data is corrupte. Checksum mismatch.");
+		Serial.println("The received BMS data is corrupted. Checksum mismatch.");
+		return;
 	}
 
-	// Get the battery data and print it
-	const BatteryData bat = bms->getBatteryData();
-	Serial.println((String) "Cell-Count: " + bat.cellCount);
-	Serial.println((String) "Min-Cell-Voltage: " + bat.cellVoltageMin + "V");
-	Serial.println((String) "Max-Cell-Voltage: " + bat.cellVoltageMax + "V");
-	Serial.println((String) "Balance-Voltage: " + bat.cellVoltageBalance + "V");
-	Serial.println((String) "Pack-SOC: " + bat.packSoc + "%");
-	Serial.println((String) "Pack-Voltage: " + bat.packVoltage + "V");
-	Serial.println((String) "Pack-Current: " + bat.packCurrent + "A");
-	Serial.println((String) "Pack-Charge-Current: " + bat.packChargeCurrent + "A");
-	Serial.println((String) "Pack-Discharge-Current: " + bat.packDischargeCurrent + "A");
-	Serial.println((String) "Pack-Capacity: " + bat.packCapacity + "kWh");
-	Serial.println((String) "Pack-Energy: " + bat.packRemainingEnergy + "kWh");
-	Serial.println((String) "Lowest-Cell-Voltage: " + bat.lowestCellVoltage + "V");
-	Serial.println((String) "Lowest-Cell-Voltage-Numer: " + bat.lowestCellVoltageNumber);
-	Serial.println((String) "Highest-Cell-Voltage: " + bat.highestCellVoltage + "V");
-	Serial.println((String) "Highest-Cell-Voltage-Number: " + bat.highestCellVoltageNumber);
-	Serial.println((String) "Lowest-Cell-Temp: " + bat.lowestCellTemperature + "°C");
-	Serial.println((String) "Lowest-Cell-Temp-Number: " + bat.lowestCellTemperatureNumber);
-	Serial.println((String) "Highest-Cell-Temp: " + bat.highestCellTemperature + "°C");
-	Serial.println((String) "Highest-Cell-Temp-Number: " + bat.highestCellTemperatureNumber);
-	Serial.println((String) "Allowed-Charge: " + (bat.allowedToCharge ? "Yes" : "No"));
-	Serial.println((String) "Allowed-Discharge: " + (bat.allowedToDischarge ? "Yes" : "No"));
-	Serial.println((String) "Alarm-Communication-Error: " + (bat.communicationError ? "Active" : "Inactive"));
-	Serial.println((String) "Alarm-Min-Voltage: " + (bat.alarmMinVoltage ? "Active" : "Inactive"));
-	Serial.println((String) "Alarm-Max-Voltage: " + (bat.alarmMaxVoltage ? "Active" : "Inactive"));
-	Serial.println((String) "Alarm-Min-Temp: " + (bat.alarmMinTemperature ? "Active" : "Inactive"));
-	Serial.println((String) "Alarm-Max-Temp: " + (bat.alarmMaxTemperature ? "Active" : "Inactive"));
+	// Get the battery data and print it to the serial monitor
+	const BatteryData battery = bms->getBatteryData();
+	Serial.println((String) "Cell-Count: " + battery.cellCount);
+	Serial.println((String) "Min-Cell-Voltage: " + battery.cellVoltageMin + "V");
+	Serial.println((String) "Max-Cell-Voltage: " + battery.cellVoltageMax + "V");
+	Serial.println((String) "Balance-Voltage: " + battery.cellVoltageBalance + "V");
+	Serial.println((String) "Pack-SOC: " + battery.packSoc + "%");
+	Serial.println((String) "Pack-Voltage: " + battery.packVoltage + "V");
+	Serial.println((String) "Pack-Current: " + battery.packCurrent + "A");
+	Serial.println((String) "Pack-Charge-Current: " + battery.packChargeCurrent + "A");
+	Serial.println((String) "Pack-Discharge-Current: " + battery.packDischargeCurrent + "A");
+	Serial.println((String) "Pack-Capacity: " + battery.packCapacity + "kWh");
+	Serial.println((String) "Pack-Energy: " + battery.packRemainingEnergy + "kWh");
+	Serial.println((String) "Lowest-Cell-Voltage: " + battery.lowestCellVoltage + "V");
+	Serial.println((String) "Lowest-Cell-Voltage-Numer: " + battery.lowestCellVoltageNumber);
+	Serial.println((String) "Highest-Cell-Voltage: " + battery.highestCellVoltage + "V");
+	Serial.println((String) "Highest-Cell-Voltage-Number: " + battery.highestCellVoltageNumber);
+	Serial.println((String) "Lowest-Cell-Temp: " + battery.lowestCellTemperature + "°C");
+	Serial.println((String) "Lowest-Cell-Temp-Number: " + battery.lowestCellTemperatureNumber);
+	Serial.println((String) "Highest-Cell-Temp: " + battery.highestCellTemperature + "°C");
+	Serial.println((String) "Highest-Cell-Temp-Number: " + battery.highestCellTemperatureNumber);
+	Serial.println((String) "Allowed-Charge: " + (battery.allowedToCharge ? "Yes" : "No"));
+	Serial.println((String) "Allowed-Discharge: " + (battery.allowedToDischarge ? "Yes" : "No"));
+	Serial.println((String) "Alarm-Communication-Error: " + (battery.communicationError ? "Active" : "Inactive"));
+	Serial.println((String) "Alarm-Min-Voltage: " + (battery.alarmMinVoltage ? "Active" : "Inactive"));
+	Serial.println((String) "Alarm-Max-Voltage: " + (battery.alarmMaxVoltage ? "Active" : "Inactive"));
+	Serial.println((String) "Alarm-Min-Temp: " + (battery.alarmMinTemperature ? "Active" : "Inactive"));
+	Serial.println((String) "Alarm-Max-Temp: " + (battery.alarmMaxTemperature ? "Active" : "Inactive"));
+
+	// Switch the signal pin on/off
+	// Do what ever you need for your purpose instead
+	if (battery.packSoc < 70)
+	{
+		digitalWrite(13, LOW);
+	}
+	else if (battery.packSoc > 95)
+	{
+		digitalWrite(13, HIGH);
+	}
 }
