@@ -91,9 +91,15 @@ void loop()
 			Serial.println((String) "Alarm-Min-Temp: " + (smartBmsData.isMinTemperatureAlarmActive() ? "Active" : "Inactive"));
 			Serial.println((String) "Alarm-Max-Temp: " + (smartBmsData.isMaxTemperatureAlarmActive() ? "Active" : "Inactive"));
 		}
-		else if (err == SmartBmsError::INVALID_CHECKSUM)
+		else if (err == SmartBmsError::ERR_READ_STREAM)
 		{
-			// Checksum is invalid, something went very wrong!
+			// Failed to read the input stream
+			Serial.println("Error: Failed to read BMS data. The input stream could not be read.");
+			return;
+		}
+		else if (err == SmartBmsError::ERR_INVALID_CHECKSUM)
+		{
+			// Checksum is invalid, something went very wrong
 			Serial.println("Error: Failed to read BMS data. The checksum is invalid.");
 			return;
 		}

@@ -44,11 +44,11 @@ SmartBmsReader::~SmartBmsReader()
 /**
  * @brief Check if the input stream is ready to be read. Once it contains at least 58 bytes, it is considdered ready.
  * @return SmartBmsError::OK when the input stream is ready to be read
- * @return SmartBmsError::NOT_ENOUGH_DATA when not enough data is available yet
+ * @return SmartBmsError::ERR_NOT_ENOUGH_DATA when not enough data is available yet
  */
 const SmartBmsError SmartBmsReader::bmsDataReady() const
 {
-	return this->inputStream_->available() >= 58 ? SmartBmsError::OK : SmartBmsError::NOT_ENOUGH_DATA;
+	return this->inputStream_->available() >= 58 ? SmartBmsError::OK : SmartBmsError::ERR_NOT_ENOUGH_DATA;
 }
 
 /**
@@ -61,12 +61,15 @@ const SmartBmsError SmartBmsReader::decodeBmsData(SmartBmsData *smartBmsData) co
 	// Ensure enough data is available in the input stream
 	if (!this->bmsDataReady())
 	{
-		return SmartBmsError::NOT_ENOUGH_DATA;
+		return SmartBmsError::ERR_NOT_ENOUGH_DATA;
 	}
 
 	// Create a buffer for the 58 bytes and read it from the input stream
-	uint8_t buffer[58] = {0};
-	this->inputStream_->readBytes(buffer, sizeof(buffer));
+	uint8_t buffer[58];
+	if (this->inputStream_->readBytes(buffer, sizeof(buffer)) != 58)
+	{
+		return SmartBmsError::ERR_READ_STREAM;
+	}
 
 	// Calculate the checksum
 	uint8_t checkSum = 0;
@@ -80,7 +83,7 @@ const SmartBmsError SmartBmsReader::decodeBmsData(SmartBmsData *smartBmsData) co
 	{
 		// Flush the stream
 		this->inputStream_->flush();
-		return SmartBmsError::INVALID_CHECKSUM;
+		return SmartBmsError::ERR_INVALID_CHECKSUM;
 	}
 
 	// Decode the BMS data from the buffer
