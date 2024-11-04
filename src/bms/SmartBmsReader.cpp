@@ -43,12 +43,12 @@ SmartBmsReader::~SmartBmsReader()
 
 /**
  * @brief Check if the input stream is ready to be read. Once it contains at least 58 bytes, it is considdered ready.
- * @return SmartBmsError::OK when the input stream is ready to be read
- * @return SmartBmsError::ERR_NOT_ENOUGH_DATA when not enough data is available yet
+ * @return SmartBmsError::SBMS_OK when the input stream is ready to be read
+ * @return SmartBmsError::SBMS_ERR_NOT_ENOUGH_DATA when not enough data is available yet
  */
 const SmartBmsError SmartBmsReader::bmsDataReady() const
 {
-	return this->inputStream_->available() >= 58 ? SmartBmsError::OK : SmartBmsError::ERR_NOT_ENOUGH_DATA;
+	return this->inputStream_->available() >= 58 ? SmartBmsError::SBMS_OK : SmartBmsError::SBMS_ERR_NOT_ENOUGH_DATA;
 }
 
 /**
@@ -59,16 +59,16 @@ const SmartBmsError SmartBmsReader::bmsDataReady() const
 const SmartBmsError SmartBmsReader::decodeBmsData(SmartBmsData *smartBmsData) const
 {
 	// Ensure enough data is available in the input stream
-	if (!this->bmsDataReady())
+	if (this->bmsDataReady() != SmartBmsError::SBMS_OK)
 	{
-		return SmartBmsError::ERR_NOT_ENOUGH_DATA;
+		return SmartBmsError::SBMS_ERR_NOT_ENOUGH_DATA;
 	}
 
 	// Create a buffer for the 58 bytes and read it from the input stream
 	uint8_t buffer[58];
 	if (this->inputStream_->readBytes(buffer, sizeof(buffer)) != 58)
 	{
-		return SmartBmsError::ERR_READ_STREAM;
+		return SmartBmsError::SBMS_ERR_READ_STREAM;
 	}
 
 	// Calculate the checksum
@@ -83,7 +83,7 @@ const SmartBmsError SmartBmsReader::decodeBmsData(SmartBmsData *smartBmsData) co
 	{
 		// Flush the stream
 		this->inputStream_->flush();
-		return SmartBmsError::ERR_INVALID_CHECKSUM;
+		return SmartBmsError::SBMS_ERR_INVALID_CHECKSUM;
 	}
 
 	// Decode the BMS data from the buffer
@@ -113,7 +113,7 @@ const SmartBmsError SmartBmsReader::decodeBmsData(SmartBmsData *smartBmsData) co
 	smartBmsData->maxVoltageAlarmActive_ = buffer[30] & 0b00010000;
 	smartBmsData->minTemperatureAlarmActive_ = buffer[30] & 0b00100000;
 	smartBmsData->maxTemperatureAlarmActive_ = buffer[30] & 0b01000000;
-	return SmartBmsError::OK;
+	return SmartBmsError::SBMS_OK;
 }
 
 /**
