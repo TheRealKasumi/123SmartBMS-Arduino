@@ -82,7 +82,7 @@ void loop()
 			Serial.println((String) "Highest-Cell-Temp: " + smartBmsData.getHighestCellTemperature() + "°C");
 			Serial.println((String) "Highest-Cell-Temp-Number: " + smartBmsData.getHighestCellTemperatureNumber());
 			Serial.println((String) "Allowed-Charge: " + (smartBmsData.isAllowedToCharge() ? "Yes" : "No"));
-			Serial.println((String) "Allowed-Discharge: " + (smartBmsData.isAllowedToCharge() ? "Yes" : "No"));
+			Serial.println((String) "Allowed-Discharge: " + (smartBmsData.isAllowedToDischarge() ? "Yes" : "No"));
 			Serial.println((String) "Alarm-Communication-Error: " + (smartBmsData.hasCommunicationError() ? "Active" : "Inactive"));
 			Serial.println((String) "Alarm-Min-Voltage: " + (smartBmsData.isMinVoltageAlarmActive() ? "Active" : "Inactive"));
 			Serial.println((String) "Alarm-Max-Voltage: " + (smartBmsData.isMaxVoltageAlarmActive() ? "Active" : "Inactive"));
@@ -95,13 +95,14 @@ void loop()
 		{
 			// Failed to read the input stream
 			Serial.println("Error: Failed to read BMS data. The input stream could not be read.");
-			return;
 		}
 		else if (err == SmartBmsError::SBMS_ERR_INVALID_CHECKSUM)
 		{
 			// Checksum is invalid, something went very wrong
 			Serial.println("Error: Failed to read BMS data. The checksum is invalid.");
-			return;
+
+			// You can try to clear the input stream to recover from the error
+			smartBmsSerial.flush();
 		}
 	}
 
